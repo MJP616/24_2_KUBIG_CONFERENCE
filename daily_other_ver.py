@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional
 import pandas as pd
 import numpy as np
@@ -7,6 +8,7 @@ import faiss
 
 class DailyRecommender:
     def __init__(self):
+        logging.getLogger("transformers.configuration_utils").setLevel(logging.ERROR)
         self.wedding_data = pd.read_csv('daily_final.csv')
 
         # 결합된 텍스트 컬럼 생성
