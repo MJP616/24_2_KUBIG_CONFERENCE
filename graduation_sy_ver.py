@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -8,6 +9,7 @@ import faiss
 class GraduationRecommendationSystem:
     def __init__(self, embedding_model='snunlp/KR-SBERT-V40K-klueNLI-augSTS',
                  bart_tokenizer='gogamza/kobart-base-v2', bart_model='gogamza/kobart-base-v2'):
+        logging.getLogger("transformers.configuration_utils").setLevel(logging.ERROR)
         # 데이터 로드
         self.wedding_data = pd.read_csv('graduation_final.csv')
         
