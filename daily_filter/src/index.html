@@ -1,0 +1,58 @@
+<style>
+@font-face {
+    font-family: 'GowunDodum-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/GowunDodum-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+#shooting-angle-select, 
+#person-count-select, 
+#shooting-angle-select option, 
+#person-count-select option {
+    font-family: 'GowunDodum-Regular', sans-serif;
+}
+
+p {
+    font-family: 'GowunDodum-Regular', sans-serif;
+    font-size: 18px;
+}
+</style>
+
+<div id="form-main">
+  <div class="slide__bg" style="--bg: url(https://raw.githubusercontent.com/yuujinnn/ai-service-snap/main/weddings.png); --dir: 0" data-current></div>
+
+  <div id="form-div">
+    <form class="form" id="form1">
+
+      <div id="shooting-angle">
+        <p style="color: white;">촬영 구도 선택:</p>
+        <select name="shooting-angle" class="feedback-input" id="shooting-angle-select">
+          <option value="" disabled selected>촬영 구도를 선택하세요</option>
+          <option value="전신샷">전신샷</option>
+          <option value="반신샷">반신샷</option>
+          <option value="근접샷">근접샷</option>
+        </select>
+      </div>
+      
+      <div id="person-count">
+        <p style="color: white;">인원 수 선택:</p>
+        <select name="person-count" class="feedback-input" id="person-count-select">
+          <option value="" disabled selected>인원 수를 선택하세요</option>
+          <option value="1명">1명</option>
+          <option value="2명">2명</option>
+          <option value="3명 이상">3명 이상</option>
+        </select>
+      </div>
+
+      <p class="text">
+        <textarea name="text" class="validate[required,length[2,300]] feedback-input" id="comment" placeholder="추가적으로 원하는 사진의 느낌을 입력하세요"></textarea>
+      </p>
+
+      <div class="submit">
+        <input type="submit" value="Recommend" id="button-blue"/>
+        <div class="ease"></div>
+      </div>
+    </form>
+  </div>
+</div>
