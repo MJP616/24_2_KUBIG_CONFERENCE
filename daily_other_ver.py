@@ -3,7 +3,7 @@ from typing import Dict, Optional
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from transformers import PreTrainedTokenizerFast, BartForConditionalGeneration
+from transformers import PreTrainedTokenizerFast, GPT2LMHeadModel
 import faiss
 
 class DailyRecommender:
@@ -18,8 +18,8 @@ class DailyRecommender:
 
         # 모델 로드
         self.sentence_model = SentenceTransformer('snunlp/KR-SBERT-V40K-klueNLI-augSTS')
-        self.tokenizer = PreTrainedTokenizerFast.from_pretrained('gogamza/kobart-base-v2')
-        self.kobart = BartForConditionalGeneration.from_pretrained('gogamza/kobart-base-v2')
+        self.tokenizer = PreTrainedTokenizerFast.from_pretrained('kakaobrain/kogpt')
+        self.kogpt = GPT2LMHeadModel.from_pretrained('kakaobrain/kogpt')
 
         # 임베딩 생성
         self.wedding_data['embeddings'] = list(
@@ -41,8 +41,8 @@ class DailyRecommender:
         출력: 분위기: <분위기>, 동작: <동작>, 배경: <배경>.
         """
         input_ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, padding=True).input_ids
-        summary_ids = self.kobart.generate(input_ids, max_length=50, num_beams=4, early_stopping=True)
-        output = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+        output_ids = self.kogpt.generate(input_ids, max_length=50, num_beams=4, early_stopping=True)
+        output = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
         return output
 
     def recommend_photographers(self, user_embedding: np.ndarray, filters: Dict[str, str], top_k: int = 3) -> pd.DataFrame:
@@ -53,7 +53,7 @@ class DailyRecommender:
                 filtered_data = filtered_data[filtered_data[key] == value]
 
         if filtered_data.empty:
-            raise ValueError("해당 조건에 맞는 데이터가 없습니다.")
+            filtered_data = self.wedding_data  # 필터 결과가 없으면 전체 데이터 사용
 
         # 필터링된 데이터에 대해 FAISS 인덱스를 생성
         filtered_embeddings = np.array(filtered_data['embeddings'].tolist())
@@ -76,8 +76,8 @@ class DailyRecommender:
         for _, row in recommendations.iterrows():
             prompt = f"색감과 분위기를 기준으로 '{row['색감_분위기_통합']}'과 유사한 데이터를 추천합니다."
             input_ids = self.tokenizer(prompt, return_tensors="pt", truncation=True, padding=True).input_ids
-            summary_ids = self.kobart.generate(input_ids, max_length=50, num_beams=4, early_stopping=True)
-            reason = self.tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            output_ids = self.kogpt.generate(input_ids, max_length=50, num_beams=4, early_stopping=True)
+            reason = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
             reasons.append(reason)
 
         recommendations['recommendation_reason'] = reasons
@@ -91,7 +91,6 @@ class DailyRecommender:
 
         return recommendations[required_columns]
 
-
     def recommend(self, text: Optional[str] = None, options: Optional[Dict[str, str]] = None, top_k: int = 3) -> pd.DataFrame:
         if not text and not options:
             raise ValueError("촬영 구도와 사진 종류, 텍스트 입력은 필수입니다.")
@@ -100,6 +99,11 @@ class DailyRecommender:
         if text:
             keywords = self.extract_keywords_from_text(text)
             text_embedding = self.sentence_model.encode([keywords])
+
+        # 옵션만 있는 경우 처리
+        if not text and options:
+            options_text = ' '.join([f"{k}: {v}" for k, v in options.items()])
+            text_embedding = self.sentence_model.encode([options_text])
 
         # 입력값이 없을 경우 에러 처리
         if text_embedding is None:
